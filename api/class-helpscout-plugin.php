@@ -82,7 +82,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
     private function fetchHtml($data)
     {
         global $wpdb;
-        $serverurl = 'https://' . $_SERVER['HTTP_HOST'] . '/' . CUSTOM_HELPSOUCT_USERENGAGE_REDIRECT_PAGE . '/';
+        $serverurl = 'https://' . $_SERVER['HTTP_HOST'] . '/';
         if (isset($data['customer']['emails']) && is_array($data['customer']['emails'])) {
             if (($key = array_search(CUSTOM_HELPSCOUT_EMAIL, $messages)) !== false) {
                 unset($data['customer']['emails'][$key]);
@@ -111,8 +111,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             $temp       = explode(' ', $userexist->name);
             $first_name = $temp[0];
             $last_name  = $temp[1];
-            $profile_link = 'https://app.userengage.com/' . CUSTOM_HELPSOUCT_USERENGAGE_ADMIN_ID . '/user/' . $userexist->id;
-            $html.= $this->render('existinguserdetails', array('profile_link'=>$profile_link, 'userexist'=>$userexist));
+            $html.= '<a href="' . $serverurl . 'helpscout_userengage_action?action=removeuser&userid=' . $userexist->id . '&v=AspxM5sEuZPdcDhAAM9f2kEcAn8="> REMOVE USER</a><br>';
           
             $html.= $this->render('lists', array('userexist'=>$userexist, 'serverurl'=>$serverurl, 'all_lists'=>$all_lists));
 
@@ -120,15 +119,16 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
 
             $html.= $this->render('mails', array('all_emails'=>$all_emails));
             $html.= $this->render('events', array('events'=>$events));
-            $html.= '<a href="' . $serverurl . 'helpscout_userengage_action?action=removeuser&userid=' . $userexist->id . '&v=AspxM5sEuZPdcDhAAM9f2kEcAn8=">remove user</a>';
-            
+
+            $profile_link = 'https://app.userengage.com/' . CUSTOM_HELPSOUCT_USERENGAGE_ADMIN_ID . '/user/' . $userexist->id;
+            $html.= $this->render('existinguserdetails', array('profile_link'=>$profile_link, 'userexist'=>$userexist));
 
         } else {
             $html.= '<a href="' . $serverurl . 'helpscout_userengage_action?action=adduser&first_name=' . $first_name . '&last_name=' . $last_name . '&email=' . $email . '&v=AspxM5sEuZPdcDhAAM9f2kEcAn8=">ADD USER</a><br>';
 
-           $html.= $this->render('lists', array('all_lists'=>$all_lists, 'serverurl'=>$serverurl, 'first_name'=>$first_name,'last_name'=>$last_name,'email'=>$email)); 
+           $html.= $this->render('lists', array('all_lists'=>$all_lists, 'first_name'=>$first_name,'last_name'=>$last_name,'email'=>$email)); 
 
-            $html.= $this->render('tags', array('all_tags'=>$all_tags,  'serverurl'=>$serverurl,'first_name'=>$first_name,
+            $html.= $this->render('tags', array('all_tags'=>$all_tags, 'first_name'=>$first_name,
                 'last_name'=>$last_name,'email'=>$email));
         }
         return $html;
@@ -315,6 +315,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
         } while ($loop == true);
         return $final;
     }
+
     public function validateString($string)
     {
         if ($string == 'AspxM5sEuZPdcDhAAM9f2kEcAn8=') {

@@ -22,8 +22,8 @@ class Custom_Helpscout_UserEngage
     }
     public function add_rewrite_endpoints()
     {
-        add_rewrite_endpoint('helpscout_userengage', EP_PERMALINK | EP_PAGES);
-        add_rewrite_endpoint('helpscout_userengage_action', EP_PERMALINK | EP_PAGES);
+        add_rewrite_endpoint('helpscout_userengage', EP_PERMALINK | EP_ROOT);
+        add_rewrite_endpoint('helpscout_userengage_action', EP_PERMALINK | EP_ROOT);
         flush_rewrite_rules();
     }
     public function template_redirect()
@@ -37,13 +37,13 @@ class Custom_Helpscout_UserEngage
         if (isset($wp_query->query_vars['helpscout_userengage_action'])) {
             $plugin = new CUSTOM_HELPSCOUT_PLUGIN_HANDLER();
             if ($plugin->validateString($_GET['v'])) {
-                $action     = $_GET['action'];
-                $user_id    = $_GET['userid'];
+                $action = $_GET['action'];
+                $user_id = $_GET['userid'];
                 $first_name = $_GET['first_name'];
-                $last_name  = $_GET['last_name'];
-                $listid     = $_GET['listid'];
-                $tag        = $_GET['tag'];
-                $email      = $_GET['email'];
+                $last_name = $_GET['last_name'];
+                $listid = $_GET['listid'];
+                $tag = $_GET['tag'];
+                $email = $_GET['email'];
                 if ($action == 'addtolist') {
                     if ($user_id && $listid) {
                         $plugin->addToList($listid, $user_id);
