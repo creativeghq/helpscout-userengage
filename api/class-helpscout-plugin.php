@@ -3,6 +3,7 @@
  * Handles the response to Help Scout queries
  *
  */
+include_once plugin_dir_path( __FILE__ ).'config.php';
 class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
 {
     private $input = false;
@@ -40,7 +41,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
     {
         $str = $this->getJsonString();
         if ($str) {
-            return base64_encode(hash_hmac('sha1', $str, 'rSPqYHmN4KsGxmY4roNKAEttDz9ZaHBfv8Ln4t1v', true));
+            return base64_encode(hash_hmac('sha1', $str, CUSTOM_HELPSCOUT_SIGNATURE, true));
         }
         return false;
     }
