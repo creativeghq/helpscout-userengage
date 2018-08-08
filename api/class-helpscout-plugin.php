@@ -3,7 +3,7 @@
  * Handles the response to Help Scout queries
  *
  */
-include_once plugin_dir_path( __FILE__ ).'config.php';
+include_once plugin_dir_path( __FILE__ ).'../config.php';
 class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
 {
     private $input = false;
