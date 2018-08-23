@@ -3,7 +3,7 @@
  * Handles the response to Help Scout queries
  *
  */
-include_once plugin_dir_path( __FILE__ ).'../config.php';
+include_once plugin_dir_path(__FILE__) . '../config.php';
 class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
 {
     private $input = false;
@@ -96,10 +96,10 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
         //check if the user exist in user engage
         $html = '';
         // $data['customer']['email'] = 'basiliskan@gmail.com';
-        $email      = $data['customer']['email'];
+        $email = $data['customer']['email'];
         $first_name = $data['customer']['fname'];
-        $last_name  = $data['customer']['lname'];
-        $userexist  = $this->findUserByEmail($email);
+        $last_name = $data['customer']['lname'];
+        $userexist = $this->findUserByEmail($email);
         //get all the lists
         $all_lists = $this->getAllLists();
         //get all the tags
@@ -109,28 +109,28 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             $all_emails = $this->getUserEmailsById($userexist->id);
             $events = $this->getAllEvents($userexist->id);
 
-            $temp       = explode(' ', $userexist->name);
+            $temp = explode(' ', $userexist->name);
             $first_name = $temp[0];
-            $last_name  = $temp[1];
-            $html.= '<a href="' . $serverurl . 'helpscout_userengage_action?action=removeuser&userid=' . $userexist->id . '&v=AspxM5sEuZPdcDhAAM9f2kEcAn8="> REMOVE USER</a><br>';
-          
-            $html.= $this->render('lists', array('userexist'=>$userexist, 'serverurl'=>$serverurl, 'all_lists'=>$all_lists));
+            $last_name = $temp[1];
+            $html .= '<a href="' . $serverurl . 'helpscout_userengage_action?action=removeuser&userid=' . $userexist->id . '&v=AspxM5sEuZPdcDhAAM9f2kEcAn8="> REMOVE USER</a><br>';
 
-            $html.= $this->render('tags', array('userexist'=>$userexist, 'serverurl'=>$serverurl, 'all_tags'=>$all_tags));
+            $html .= $this->render('lists', array('userexist' => $userexist, 'serverurl' => $serverurl, 'all_lists' => $all_lists));
 
-            $html.= $this->render('mails', array('all_emails'=>$all_emails));
-            $html.= $this->render('events', array('events'=>$events));
+            $html .= $this->render('tags', array('userexist' => $userexist, 'serverurl' => $serverurl, 'all_tags' => $all_tags));
+
+            $html .= $this->render('mails', array('all_emails' => $all_emails));
+            $html .= $this->render('events', array('events' => $events));
 
             $profile_link = 'https://app.userengage.com/' . CUSTOM_HELPSOUCT_USERENGAGE_ADMIN_ID . '/user/' . $userexist->id;
-            $html.= $this->render('existinguserdetails', array('profile_link'=>$profile_link, 'userexist'=>$userexist));
+            $html .= $this->render('existinguserdetails', array('profile_link' => $profile_link, 'userexist' => $userexist));
 
         } else {
-            $html.= '<a href="' . $serverurl . 'helpscout_userengage_action?action=adduser&first_name=' . $first_name . '&last_name=' . $last_name . '&email=' . $email . '&v=AspxM5sEuZPdcDhAAM9f2kEcAn8=">ADD USER</a><br>';
+            $html .= '<a href="' . $serverurl . 'helpscout_userengage_action?action=adduser&first_name=' . $first_name . '&last_name=' . $last_name . '&email=' . $email . '&v=AspxM5sEuZPdcDhAAM9f2kEcAn8=">ADD USER</a><br>';
 
-           $html.= $this->render('lists', array('all_lists'=>$all_lists, 'first_name'=>$first_name,'last_name'=>$last_name,'email'=>$email)); 
+            $html .= $this->render('lists', array('all_lists' => $all_lists, 'first_name' => $first_name, 'last_name' => $last_name, 'email' => $email));
 
-            $html.= $this->render('tags', array('all_tags'=>$all_tags, 'first_name'=>$first_name,
-                'last_name'=>$last_name,'email'=>$email));
+            $html .= $this->render('tags', array('all_tags' => $all_tags, 'first_name' => $first_name,
+                'last_name' => $last_name, 'email' => $email));
         }
         return $html;
     }
@@ -147,7 +147,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             return false;
         }
     }
-    public function removeFromList($userId, $listId)
+    public function removeFromList($userId, $listId, $delay = 1, $retries = 3)
     {
         try
         {
@@ -156,12 +156,20 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             $ue->setMethod('POST');
             $ue->addField('list', $listId);
             $result = $ue->send();
-            return $result;
+            if (!isset($result->detail)) {
+                return $result;
+            } elseif (isset($result->detail) && $retries > 0) {
+                sleep($delay);
+                return $this->removeFromList($userId, $listId, $delay, $retries = $retries - 1);
+            } else {
+                return false;
+            }
+
         } catch (Exception $e) {
             return false;
         }
     }
-    public function removeTag($userId, $tag)
+    public function removeTag($userId, $tag, $delay = 1, $retries = 3)
     {
         try
         {
@@ -171,12 +179,19 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             // Add the required fields:
             $ue->addField('name', $tag);
             $result = $ue->send();
-            return $result;
+            if (!isset($result->detail)) {
+                return $result;
+            } elseif (isset($result->detail) && $retries > 0) {
+                sleep($delay);
+                return $this->removeTag($userId, $tag, $delay, $retries = $retries - 1);
+            } else {
+                return false;
+            }
         } catch (Exception $e) {
             return false;
         }
     }
-    public function addToTag($tag, $userId = '', $newUser = false, $newUserEmail = '', $newUserFirstname = '', $newUserLastname = '')
+    public function addToTag($tag, $userId = '', $newUser = false, $newUserEmail = '', $newUserFirstname = '', $newUserLastname = '', $delay = 1, $retries = 3)
     {
         if ($newUser == true && $userId == '') {
             $userId = $this->createUser($newUserEmail, $newUserFirstname, $newUserLastname);
@@ -189,8 +204,11 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             // Add the required fields:
             $ue->addField('name', $tag);
             $result = $ue->send();
-            if ($result) {
+            if (!isset($result->detail)) {
                 return $userId;
+            } elseif (isset($result->detail) && $retries > 0) {
+                sleep($delay);
+                return $this->addToTag($tag, $userId, $newUser, $newUserEmail, $newUserFirstname, $newUserLastname, $delay, $retries = $retries - 1);
             } else {
                 return false;
             }
@@ -198,7 +216,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             return false;
         }
     }
-    public function addToList($listId, $userId = '', $newUser = false, $newUserEmail = '', $newUserFirstname = '', $newUserLastname = '')
+    public function addToList($listId, $userId = '', $newUser = false, $newUserEmail = '', $newUserFirstname = '', $newUserLastname = '', $delay = 1, $retries = 3)
     {
         if ($newUser == true && $userId == '') {
             $userId = $this->createUser($newUserEmail, $newUserFirstname, $newUserLastname);
@@ -211,8 +229,11 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             // Add the required fields:
             $ue->addField('list', $listId);
             $result = $ue->send();
-            if ($result) {
+            if (!isset($result->detail)) {
                 return $userId;
+            } elseif (isset($result->detail) && $retries > 0) {
+                sleep($delay);
+                return $this->addToList($listId, $userId, $newUser, $newUserEmail, $newUserFirstname, $newUserLastname, $delay, $retries = $retries - 1);
             } else {
                 return false;
             }
@@ -220,7 +241,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             return false;
         }
     }
-    public function createUser($email, $firstname = '', $lastmame = '')
+    public function createUser($email, $firstname = '', $lastmame = '', $delay = 1, $retries = 3)
     {
         try
         {
@@ -231,8 +252,11 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             $ue->addField('firstname', $firstname);
             $ue->addField('last_name', $lastmame);
             $result = $ue->send();
-            if ($result->id) {
+            if (isset($result->id)) {
                 return $result->id;
+            } elseif (isset($result->detail) && $retries > 0) {
+                sleep($delay);
+                return $this->createUser($email, $firstname, $lastmame, $delay, $retries = $retries - 1);
             } else {
                 return false;
             }
@@ -266,7 +290,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             return false;
         }
     }
-    public function deleteUser($userId)
+    public function deleteUser($userId, $delay = 1, $retries = 3)
     {
         try
         {
@@ -274,7 +298,17 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
             $ue->setEndpoint('users/' . $userId . '/');
             $ue->setMethod('DELETE');
             $result = $ue->send();
-            return $result;
+            if (!isset($result->detail)) {
+                return $result;
+            } else {
+                if (isset($result->detail) && $retries > 0) {
+                    sleep($delay);
+                    return $this->deleteUser($userId, $delay, $retries - 1);
+                } else {
+                    return false;
+                }
+            }
+
         } catch (Exception $e) {
             return false;
         }
@@ -294,8 +328,8 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
     }
     public function getUserEmailsById($userId)
     {
-        $final    = array();
-        $loop     = false;
+        $final = array();
+        $loop = false;
         $endpoint = 'users/' . $userId . '/emails/';
         do {
             $ue = new CUSTOM_HELPSCOUT(CUSTOM_HELPSOUCT_USERENGAGE_API_KEY);
@@ -307,7 +341,7 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
                     $final[] = $res;
                 }
                 if ($result->next != null && $result->next) {
-                    $loop     = true;
+                    $loop = true;
                     $endpoint = str_replace('https://app.userengage.com/api/public/', '', $result->next);
                 } else {
                     $loop = false;
@@ -329,9 +363,9 @@ class CUSTOM_HELPSCOUT_PLUGIN_HANDLER
     {
         // Handle data
         ($data) ? extract($data) : null;
-    
+
         ob_start();
-        include(plugin_dir_path(__FILE__).'../inc/'.$view.'.php');
+        include plugin_dir_path(__FILE__) . '../inc/' . $view . '.php';
         $view = ob_get_contents();
         ob_end_clean();
 
